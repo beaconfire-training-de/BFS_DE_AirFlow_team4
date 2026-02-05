@@ -102,14 +102,19 @@ with DAG(
     # ---------- Incremental path tasks ----------
     run_incremental_path = EmptyOperator(task_id="run_incremental_path")
 
-    incremental_load = SnowflakeOperator(
-        task_id="incremental_load_dims_fact",
+    dim_incremental = SnowflakeOperator(
+        task_id="incremental_load_dims",
         sql="\n".join([
             load_sql("incremental", "01_dim_date_incremental_4.sql"),
             load_sql("incremental", "02_dim_company_core_scd2_4.sql"),
             load_sql("incremental", "03_dim_company_financial_upsert_4.sql"),
-            load_sql("incremental", "04_fact_stock_price_incremental_4.sql"),
         ]),
+        snowflake_conn_id=SNOWFLAKE_CONN_ID,
+    )
+
+    fact_stock_price_incremental = SnowflakeOperator(
+        task_id="fact_stock_price_incremental",
+        sql=load_sql("incremental", "04_fact_stock_price_incremental_4.sql"),
         snowflake_conn_id=SNOWFLAKE_CONN_ID,
     )
 
@@ -171,6 +176,6 @@ with DAG(
     branch >> run_full_path >> refresh_staging_full >> full_load_dims >> full_load_fact >> join
 
     # Incremental path
-    branch >> run_incremental_path >> incremental_load >> join
+    branch >> run_incremental_path >> dim_incremental >> fact_stock_price_incremental >> join
 
     join >> update_watermark >> dq >> end
