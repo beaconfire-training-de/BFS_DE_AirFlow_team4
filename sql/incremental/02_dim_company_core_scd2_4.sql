@@ -1,9 +1,8 @@
--- 1) 先把 current 记录中“发生变化”的行关掉（end_date + is_current=false）
 UPDATE AIRFLOW0105.DEV.DIM_COMPANY_CORE_4 tgt
 SET
   effective_end_date = CURRENT_DATE(),
   is_current = FALSE
-FROM AIRFLOW0105.STAGING.STG_COMPANY_PROFILE_4 src
+FROM AIRFLOW0105.DEV.STG_COMPANY_PROFILE_4 src
 WHERE tgt.symbol = src.symbol
   AND tgt.is_current = TRUE
   AND (
@@ -15,9 +14,6 @@ WHERE tgt.symbol = src.symbol
     COALESCE(tgt.ceo, '')          <> COALESCE(src.ceo, '')
   );
 
--- 2) 插入新记录：
---   a) 新 symbol（dim 里没有）
---   b) 或者刚刚被关掉的 symbol（变化后需要新 current 行）
 INSERT INTO AIRFLOW0105.DEV.DIM_COMPANY_CORE_4
 (
   company_sk, symbol, company_name, industry, sector, exchange, website, ceo,
@@ -36,7 +32,7 @@ SELECT
   CURRENT_DATE() AS effective_start_date,
   '9999-12-31'::DATE AS effective_end_date,
   TRUE AS is_current
-FROM AIRFLOW0105.STAGING.STG_COMPANY_PROFILE_4 src
+FROM AIRFLOW0105.DEV.STG_COMPANY_PROFILE_4 src
 LEFT JOIN AIRFLOW0105.DEV.DIM_COMPANY_CORE_4 cur
   ON cur.symbol = src.symbol AND cur.is_current = TRUE
 WHERE cur.symbol IS NULL;
