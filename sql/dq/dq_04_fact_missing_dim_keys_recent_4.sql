@@ -1,4 +1,3 @@
-SELECT 1;
 WITH wm AS (
   SELECT {{LAST_LOADED_DATE}}::DATE AS last_loaded_date
 ),
