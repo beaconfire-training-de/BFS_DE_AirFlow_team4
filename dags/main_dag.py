@@ -136,7 +136,11 @@ with DAG(
             ("dq_01_symbols_null_or_dup", load_sql("dq", "dq_01_symbols_null_or_dup_4.sql")),
             ("dq_02_symbols_missing_company_profile", load_sql("dq", "dq_02_symbols_missing_company_profile_4.sql")),
             ("dq_03_stock_history_symbol_not_in_symbols", load_sql("dq", "dq_03_stock_history_symbol_not_in_symbols_4.sql")),
-            ("dq_04_fact_missing_dim_keys_recent", load_sql("dq", "dq_04_fact_missing_dim_keys_recent_4.sql").replace("{{LAST_LOADED_DATE}}", str(last_loaded) if last_loaded else "NULL")),
+            (
+                "dq_04_fact_missing_dim_keys_recent", 
+                load_sql("dq", "dq_04_fact_missing_dim_keys_recent_4.sql")
+                    .replace("{{LAST_LOADED_DATE}}", f"'{last_loaded}'" if last_loaded else "NULL")
+            ),
         ]
 
         failed = []
