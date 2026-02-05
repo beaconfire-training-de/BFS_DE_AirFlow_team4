@@ -1,66 +1,46 @@
+import os
+from datetime import datetime
 from airflow import DAG
 from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
-from datetime import datetime
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SQL_DIR = os.path.join(BASE_DIR, "..", "sql")
+
+default_args = {
+    "owner": "team4",
+}
 
 with DAG(
-    dag_id = "init_stock_etl_4",
-    start_date = datetime(2024, 1, 1),
-    schedule_interval = None,
-    catchup = False
+    dag_id="init_stock_infra_4",
+    default_args=default_args,
+    start_date=datetime(2024, 1, 1),
+    schedule_interval=None,
+    catchup=False,
+    tags=["team4", "init"],
 ) as dag:
-    
+
     create_schemas = SnowflakeOperator(
-        task_id = "create_schemas",
-        snowflake_conn_id="jan_airflow_snowflake",
-        sql = "sql/init/00_create_schemas.sql"
+        task_id="create_schemas",
+        sql=os.path.join(SQL_DIR, "init", "00_create_schemas.sql"),
+        snowflake_conn_id="snowflake_default",
     )
 
-    create_metadata = SnowflakeOperator(
-        task_id="create_metadata",
-        snowflake_conn_id="jan_airflow_snowflake",
-        sql="sql/metadata/create_metadata_table_4.sql"
+    create_staging_tables = SnowflakeOperator(
+        task_id="create_staging_tables",
+        sql=os.path.join(SQL_DIR, "init", "01_create_staging_tables.sql"),
+        snowflake_conn_id="snowflake_default",
     )
 
-    init_metadata = SnowflakeOperator(
-        task_id="init_metadata",
-        snowflake_conn_id="jan_airflow_snowflake",
-        sql="sql/metadata/init_metadata_record_4.sql"
+    create_metadata_table = SnowflakeOperator(
+        task_id="create_metadata_table",
+        sql=os.path.join(SQL_DIR, "metadata", "create_metadata_table_4.sql"),
+        snowflake_conn_id="snowflake_default",
     )
 
-    refresh_staging = SnowflakeOperator(
-        task_id="refresh_staging",
-        snowflake_conn_id="jan_airflow_snowflake",
-        sql="sql/staging/refresh_staging.sql"
+    init_metadata_record = SnowflakeOperator(
+        task_id="init_metadata_record",
+        sql=os.path.join(SQL_DIR, "metadata", "init_metadata_record_4.sql"),
+        snowflake_conn_id="snowflake_default",
     )
 
-    dim_date = SnowflakeOperator(
-        task_id="dim_date",
-        snowflake_conn_id="jan_airflow_snowflake",
-        sql="sql/init/create_dim_date_4.sql"
-    )
-
-    dim_company_core = SnowflakeOperator(
-        task_id="dim_company_core",
-        snowflake_conn_id="jan_airflow_snowflake",
-        sql="sql/init/create_dim_company_core_4.sql"
-    )
-
-    dim_company_financial = SnowflakeOperator(
-        task_id="dim_company_financial",
-        snowflake_conn_id="jan_airflow_snowflake",
-        sql="sql/init/create_dim_company_financial_4.sql"
-    )
-
-    fact = SnowflakeOperator(
-        task_id="fact",
-        snowflake_conn_id="jan_airflow_snowflake",
-        sql="sql/init/create_fact_stock_price_4.sql"
-    )
-
-    update_watermark = SnowflakeOperator(
-        task_id="update_watermark",
-        snowflake_conn_id="jan_airflow_snowflake",
-        sql="sql/metadata/update_watermark_4.sql"
-    )
-
-    create_schemas >> create_metadata >> init_metadata >> refresh_staging >> dim_date >> dim_company_core >> dim_company_financial >> fact >> update_watermark
+    create_schemas >> create_staging_tables >> create_metadata_table >> init_metadata_record
