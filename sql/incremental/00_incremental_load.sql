@@ -1,4 +1,8 @@
+USE DATABASE AIRFLOW0105
+USE SCHEMA DEV    
+
 -- Load data to dim_date table (Append)
+INSERT INTO DIM_DATE(date_sk, date, year, quarter, month, day, weekday, is_weekend, is_month_end, is_quarter_end)
 SELECT DISTINCT date_sk, date, year, quarter, month, day, weekday, is_weekend, is_month_end, is_quarter_end
 FROM STG_STOCK_HISTORY; --not created the table yet
 
