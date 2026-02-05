@@ -85,11 +85,11 @@ with DAG(
 
     full_load_dims = SnowflakeOperator(
         task_id="full_load_dims",
-        sql=[
+        sql="\n".join([
             load_sql("init", "create_dim_date_4.sql"),
             load_sql("init", "create_dim_company_core_4.sql"),
             load_sql("init", "create_dim_company_financial_4.sql")
-        ],
+        ]),
         snowflake_conn_id=SNOWFLAKE_CONN_ID,
     )
 
@@ -104,12 +104,12 @@ with DAG(
 
     incremental_load = SnowflakeOperator(
         task_id="incremental_load_dims_fact",
-        sql=[
+        sql="\n".join([
             load_sql("incremental", "01_dim_date_incremental_4.sql"),
             load_sql("incremental", "02_dim_company_core_scd2_4.sql"),
             load_sql("incremental", "03_dim_company_financial_upsert_4.sql"),
             load_sql("incremental", "04_fact_stock_price_incremental_4.sql"),
-        ],
+        ]),
         snowflake_conn_id=SNOWFLAKE_CONN_ID,
     )
 
