@@ -6,9 +6,12 @@ from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SQL_DIR = os.path.join(BASE_DIR, "..", "sql")
 
-default_args = {
-    "owner": "team4",
-}
+def load_sql(*paths):
+    file_path = os.path.join(SQL_DIR, *paths)
+    with open(file_path, "r") as f:
+        return f.read()
+
+default_args = {"owner": "team4"}
 
 with DAG(
     dag_id="init_stock_infra_4",
@@ -21,25 +24,25 @@ with DAG(
 
     create_schemas = SnowflakeOperator(
         task_id="create_schemas",
-        sql=os.path.join(SQL_DIR, "init", "00_create_schemas.sql"),
+        sql=load_sql("init", "00_create_schemas.sql"),
         snowflake_conn_id="snowflake_default",
     )
 
     create_staging_tables = SnowflakeOperator(
         task_id="create_staging_tables",
-        sql=os.path.join(SQL_DIR, "init", "01_create_staging_tables.sql"),
+        sql=load_sql("init", "01_create_staging_tables.sql"),
         snowflake_conn_id="snowflake_default",
     )
 
     create_metadata_table = SnowflakeOperator(
         task_id="create_metadata_table",
-        sql=os.path.join(SQL_DIR, "metadata", "create_metadata_table_4.sql"),
+        sql=load_sql("metadata", "create_metadata_table_4.sql"),
         snowflake_conn_id="snowflake_default",
     )
 
     init_metadata_record = SnowflakeOperator(
         task_id="init_metadata_record",
-        sql=os.path.join(SQL_DIR, "metadata", "init_metadata_record_4.sql"),
+        sql=load_sql("metadata", "init_metadata_record_4.sql"),
         snowflake_conn_id="snowflake_default",
     )
 
