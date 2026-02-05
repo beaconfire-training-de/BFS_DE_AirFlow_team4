@@ -25,25 +25,25 @@ with DAG(
     create_schemas = SnowflakeOperator(
         task_id="create_schemas",
         sql=load_sql("init", "00_create_schemas.sql"),
-        snowflake_conn_id="snowflake_default",
+        snowflake_conn_id="jan_airflow_snowflake",
     )
 
     create_staging_tables = SnowflakeOperator(
         task_id="create_staging_tables",
         sql=load_sql("init", "01_create_staging_tables.sql"),
-        snowflake_conn_id="snowflake_default",
+        snowflake_conn_id="jan_airflow_snowflake",
     )
 
     create_metadata_table = SnowflakeOperator(
         task_id="create_metadata_table",
         sql=load_sql("metadata", "create_metadata_table_4.sql"),
-        snowflake_conn_id="snowflake_default",
+        snowflake_conn_id="jan_airflow_snowflake",
     )
 
     init_metadata_record = SnowflakeOperator(
         task_id="init_metadata_record",
         sql=load_sql("metadata", "init_metadata_record_4.sql"),
-        snowflake_conn_id="snowflake_default",
+        snowflake_conn_id="jan_airflow_snowflake",
     )
 
     create_schemas >> create_staging_tables >> create_metadata_table >> init_metadata_record
