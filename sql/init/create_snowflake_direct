@@ -1,0 +1,182 @@
+/* ----create stage in dev - tables */
+
+USE DATABASE AIRFLOW0105;
+USE SCHEMA DEV;
+
+CREATE OR REPLACE TABLE COMPANY_PROFILE_STAGE_GROUP4 AS
+SELECT * FROM US_STOCK_DAILY.DCCM.COMPANY_PROFILE;
+
+CREATE OR REPLACE TABLE STOCK_HISTORY_STAGE_GROUP4 AS
+SELECT * FROM US_STOCK_DAILY.DCCM.STOCK_HISTORY;
+
+CREATE OR REPLACE TABLE SYMBOLS_STAGE_GROUP4 AS
+SELECT * FROM US_STOCK_DAILY.DCCM.SYMBOLS;
+
+
+/* ----create_dim_company_core_group4.sql */
+
+/* =========================================================
+   DIM_COMPANY_CORE_GROUP4 (SCD2 baseline load: all current)
+   Source: AIRFLOW0105.DEV.COMPANY_PROFILE_STAGE_GROUP4 (+ optional SYMBOLS_STAGE_GROUP4)
+   Target: AIRFLOW0105.DEV.DIM_COMPANY_CORE_GROUP4
+   ========================================================= */
+
+CREATE TABLE IF NOT EXISTS AIRFLOW0105.DEV.DIM_COMPANY_CORE_GROUP4 (
+  company_sk            NUMBER,
+  symbol                VARCHAR(16),
+  company_name          VARCHAR(512),
+  industry              VARCHAR(128),
+  sector                VARCHAR(128),
+  exchange              VARCHAR(64),
+  website               VARCHAR(256),
+  ceo                   VARCHAR(128),
+  description           VARCHAR(4096),
+  effective_start_date  DATE,
+  effective_end_date    DATE,
+  is_current            BOOLEAN
+);
+
+/* Optional: truncate before full reload style (comment out if you want append-only) */
+TRUNCATE TABLE AIRFLOW0105.DEV.DIM_COMPANY_CORE_GROUP4;
+
+INSERT INTO AIRFLOW0105.DEV.DIM_COMPANY_CORE_GROUP4
+SELECT
+  SEQ8() AS company_sk,
+  cp.symbol,
+  COALESCE(cp.companyname, s.name) AS company_name,
+  cp.industry,
+  cp.sector,
+  COALESCE(cp.exchange, s.exchange) AS exchange,
+  cp.website,
+  cp.ceo,
+  cp.description,
+  CURRENT_DATE() AS effective_start_date,
+  '9999-12-31'::DATE AS effective_end_date,
+  TRUE AS is_current
+FROM AIRFLOW0105.DEV.COMPANY_PROFILE_STAGE_GROUP4 cp
+LEFT JOIN AIRFLOW0105.DEV.SYMBOLS_STAGE_GROUP4 s
+  ON cp.symbol = s.symbol;
+
+
+/* ----create_dim_company_financial_group4.sql */
+/* =========================================================
+   DIM_COMPANY_FINANCIAL_GROUP4 (current snapshot)
+   Source: AIRFLOW0105.DEV.COMPANY_PROFILE_STAGE_GROUP4
+   Target: AIRFLOW0105.DEV.DIM_COMPANY_FINANCIAL_GROUP4
+   ========================================================= */
+
+CREATE TABLE IF NOT EXISTS AIRFLOW0105.DEV.DIM_COMPANY_FINANCIAL_GROUP4 (
+  financial_sk  NUMBER,
+  symbol        VARCHAR(16),
+  range         VARCHAR(64),
+  price         NUMBER(18,8),
+  beta          NUMBER(18,8),
+  volavg        NUMBER(38,0),
+  mktcap        NUMBER(38,0),
+  lastdiv       NUMBER(18,8),
+  dcf           NUMBER(18,8),
+  dcfdiff       NUMBER(18,8),
+  changes       NUMBER(18,8)
+);
+
+TRUNCATE TABLE AIRFLOW0105.DEV.DIM_COMPANY_FINANCIAL_GROUP4;
+
+INSERT INTO AIRFLOW0105.DEV.DIM_COMPANY_FINANCIAL_GROUP4
+SELECT
+  SEQ8() AS financial_sk,
+  symbol,
+  range,
+  price,
+  beta,
+  volavg,
+  mktcap,
+  lastdiv,
+  dcf,
+  dcfdiff,
+  changes
+FROM AIRFLOW0105.DEV.COMPANY_PROFILE_STAGE_GROUP4;
+
+
+/* ----create_dim_date_group4.sql */
+/* =========================================================
+   DIM_DATE_GROUP4
+   Source: AIRFLOW0105.DEV.STOCK_HISTORY_STAGE_GROUP4
+   Target: AIRFLOW0105.DEV.DIM_DATE_GROUP4
+   ========================================================= */
+
+CREATE TABLE IF NOT EXISTS AIRFLOW0105.DEV.DIM_DATE_GROUP4 (
+  date_sk        NUMBER,
+  date           DATE,
+  year           NUMBER,
+  quarter        NUMBER,
+  month          NUMBER,
+  day            NUMBER,
+  weekday        NUMBER,
+  is_weekend     BOOLEAN,
+  is_month_end   BOOLEAN,
+  is_quarter_end BOOLEAN
+);
+
+TRUNCATE TABLE AIRFLOW0105.DEV.DIM_DATE_GROUP4;
+
+INSERT INTO AIRFLOW0105.DEV.DIM_DATE_GROUP4
+SELECT DISTINCT
+  TO_NUMBER(TO_CHAR(d, 'YYYYMMDD')) AS date_sk,
+  d AS date,
+  YEAR(d) AS year,
+  QUARTER(d) AS quarter,
+  MONTH(d) AS month,
+  DAY(d) AS day,
+  DAYOFWEEKISO(d) AS weekday, /* 1=Mon ... 7=Sun */
+  IFF(DAYOFWEEKISO(d) IN (6,7), TRUE, FALSE) AS is_weekend,
+  IFF(d = LAST_DAY(d), TRUE, FALSE) AS is_month_end,
+  IFF(d = LAST_DAY(d, 'QUARTER'), TRUE, FALSE) AS is_quarter_end
+FROM (
+  SELECT "DATE"::DATE AS d
+  FROM AIRFLOW0105.DEV.STOCK_HISTORY_STAGE_GROUP4
+);
+
+
+
+/* ----create_fact_stock_price_group4.sql */
+/* =========================================================
+   FACT_STOCK_PRICE_GROUP4
+   Source: AIRFLOW0105.DEV.STOCK_HISTORY_STAGE_GROUP4
+   Target: AIRFLOW0105.DEV.FACT_STOCK_PRICE_GROUP4
+   ========================================================= */
+
+CREATE TABLE IF NOT EXISTS AIRFLOW0105.DEV.FACT_STOCK_PRICE_GROUP4 (
+  stock_fact_sk NUMBER,
+  company_sk    NUMBER,
+  date_sk       NUMBER,
+  financial_sk  NUMBER,
+  open          NUMBER(18,8),
+  high          NUMBER(18,8),
+  low           NUMBER(18,8),
+  close         NUMBER(18,8),
+  adjclose      NUMBER(18,8),
+  volume        NUMBER(38,0)
+);
+
+TRUNCATE TABLE AIRFLOW0105.DEV.FACT_STOCK_PRICE_GROUP4;
+
+INSERT INTO AIRFLOW0105.DEV.FACT_STOCK_PRICE_GROUP4
+SELECT
+  SEQ8() AS stock_fact_sk,
+  c.company_sk,
+  d.date_sk,
+  f.financial_sk,
+  h.open,
+  h.high,
+  h.low,
+  h.close,
+  h.adjclose,
+  h.volume
+FROM AIRFLOW0105.DEV.STOCK_HISTORY_STAGE_GROUP4 h
+JOIN AIRFLOW0105.DEV.DIM_COMPANY_CORE_GROUP4 c
+  ON h.symbol = c.symbol
+ AND c.is_current = TRUE
+JOIN AIRFLOW0105.DEV.DIM_DATE_GROUP4 d
+  ON h."DATE"::DATE = d.date
+LEFT JOIN AIRFLOW0105.DEV.DIM_COMPANY_FINANCIAL_GROUP4 f
+  ON h.symbol = f.symbol;
