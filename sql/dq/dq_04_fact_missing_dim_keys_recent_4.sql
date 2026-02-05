@@ -3,7 +3,7 @@ WITH wm AS (
 ),
 src AS (
   SELECT DISTINCT h.symbol, h.date
-  FROM AIRFLOW0105.STAGING.STG_STOCK_HISTORY_4 h
+  FROM AIRFLOW0105.DEV.STG_STOCK_HISTORY_4 h
   CROSS JOIN wm
   WHERE wm.last_loaded_date IS NULL OR h.date > wm.last_loaded_date
 )
