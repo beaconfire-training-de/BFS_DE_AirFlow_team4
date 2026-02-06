@@ -37,6 +37,7 @@ BFS_DE_AIRFLOW_TEAM4/
 │
 └── docs/ # Documentation and diagrams
 ```
+<img width="2544" height="293" alt="image" src="https://github.com/user-attachments/assets/36d9892b-c8c0-4984-98da-4d6940edceec" />
 
 ---
 
