@@ -1,0 +1,82 @@
+WITH
+-- -------------------------
+-- dq_01: symbols null or duplicate
+-- -------------------------
+dq_01 AS (
+  SELECT COUNT(*) AS fail_cnt
+  FROM (
+    SELECT symbol
+    FROM AIRFLOW0105.DEV.STG_SYMBOLS_4
+    GROUP BY symbol
+    HAVING symbol IS NULL OR COUNT(*) > 1
+  )
+),
+
+-- -------------------------
+-- dq_02: symbols missing company_profile
+-- -------------------------
+dq_02 AS (
+  SELECT COUNT(*) AS fail_cnt
+  FROM (
+    SELECT s.symbol
+    FROM AIRFLOW0105.DEV.STG_SYMBOLS_4 s
+    LEFT JOIN AIRFLOW0105.DEV.STG_COMPANY_PROFILE_4 c
+      ON s.symbol = c.symbol
+    WHERE c.symbol IS NULL
+  )
+),
+
+-- -------------------------
+-- dq_03: stock_history symbol not in symbols
+-- -------------------------
+dq_03 AS (
+  SELECT COUNT(*) AS fail_cnt
+  FROM (
+    SELECT h.symbol
+    FROM AIRFLOW0105.DEV.STG_STOCK_HISTORY_4 h
+    LEFT JOIN AIRFLOW0105.DEV.STG_SYMBOLS_4 s
+      ON h.symbol = s.symbol
+    WHERE s.symbol IS NULL
+  )
+),
+
+-- -------------------------
+-- dq_04: recent fact rows missing dim keys
+-- NOTE: Assumes you have these dims + surrogate keys:
+--   DIM_COMPANY_CORE_4(company_sk, symbol, is_current)
+--   DIM_DATE_4(date_sk, date)
+--   DIM_COMPANY_FINANCIAL_4(financial_sk, symbol)
+-- and your fact uses: company_sk, date_sk, financial_sk, as_of_date
+-- -------------------------
+dq_04 AS (
+  SELECT COUNT(*) AS fail_cnt
+  FROM (
+    SELECT
+      f.company_sk,
+      f.date_sk,
+      f.financial_sk
+    FROM AIRFLOW0105.DEV.FACT_STOCK_PRICE_4 f
+    LEFT JOIN AIRFLOW0105.DEV.DIM_COMPANY_CORE_4 c
+      ON f.company_sk = c.company_sk
+     AND c.is_current = TRUE
+    LEFT JOIN AIRFLOW0105.DEV.DIM_DATE_4 d
+      ON f.date_sk = d.date_sk
+    LEFT JOIN AIRFLOW0105.DEV.DIM_COMPANY_FINANCIAL_4 fin
+      ON f.financial_sk = fin.financial_sk
+    WHERE ({{LAST_LOADED_DATE}} IS NULL) OR (f.as_of_date >= {{LAST_LOADED_DATE}})
+      AND (
+        c.company_sk IS NULL
+        OR d.date_sk IS NULL
+        OR fin.financial_sk IS NULL
+      )
+  )
+)
+
+SELECT 'dq_01_symbols_null_or_dup'              AS dq_name, (SELECT fail_cnt FROM dq_01) AS fail_cnt
+UNION ALL
+SELECT 'dq_02_symbols_missing_company_profile'  AS dq_name, (SELECT fail_cnt FROM dq_02) AS fail_cnt
+UNION ALL
+SELECT 'dq_03_stock_history_symbol_not_in_symbols' AS dq_name, (SELECT fail_cnt FROM dq_03) AS fail_cnt
+UNION ALL
+SELECT 'dq_04_fact_missing_dim_keys_recent'     AS dq_name, (SELECT fail_cnt FROM dq_04) AS fail_cnt
+;
