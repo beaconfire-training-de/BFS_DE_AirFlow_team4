@@ -1,6 +1,6 @@
 -- Load data to dim_date table (Append)
 SELECT DISTINCT date_sk, date, year, quarter, month, day, weekday, is_weekend, is_month_end, is_quarter_end
-FROM STG_STOCK_HISTORY; --not created the table yet
+FROM STG_STOCK_HISTORY;
 
 -- Load data to dim_company_financial (SCD 1) 
 MERGE INTO dim_company_financial AS d
@@ -115,7 +115,7 @@ WHERE d.customer_id IS NULL OR
 -- Load data to fact table
 INSERT INTO fact_stock_price_4
 SELECT stock_fact_sk, company_sk, date_sk, financial_sk, open, high, low, close, adjclose, volume
-FROM STG_STOCK_HISTORY; --not created the table yet
+FROM STG_STOCK_HISTORY;
 
 --Update ETL Metadata??
 /*UPDATE etl_metadata
