@@ -19,6 +19,8 @@ It ingests raw stock and company data into staging tables, transforms them into 
 ---
 
 ## Project Structure
+
+```text
 BFS_DE_AIRFLOW_TEAM4/
 │
 ├── dags/
@@ -34,7 +36,7 @@ BFS_DE_AIRFLOW_TEAM4/
 │ └── dq/ # Data quality SQL checks
 │
 └── docs/ # Documentation and diagrams
-
+```
 
 ---
 
