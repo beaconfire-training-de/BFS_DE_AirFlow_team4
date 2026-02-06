@@ -38,6 +38,12 @@ BFS_DE_AIRFLOW_TEAM4/
 └── docs/ # Documentation and diagrams
 ```
 
+
+---
+
+## Data Model ERM
+<img width="1120" height="964" alt="Airflow_Star_Model" src="https://github.com/user-attachments/assets/baf6b12b-2284-4288-a415-efff45c87d4e" />
+
 ---
 
 ## Pipeline Logic
