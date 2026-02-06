@@ -89,6 +89,7 @@ Key Fields:
 ### Staging Tables
 - `STG_STOCK_HISTORY_4`
 - `STG_COMPANY_PROFILE_4`
+- `STG_SYMBOLS_4`
 
 ### Dimension Tables
 - `DIM_DATE_4`
