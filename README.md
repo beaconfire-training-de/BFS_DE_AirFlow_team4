@@ -43,6 +43,7 @@ BFS_DE_AIRFLOW_TEAM4/
 ## Pipeline Logic
 
 ### Full Load Path
+```text
 Triggered when metadata indicates the system is not initialized.
 Start
 → Refresh Staging Tables
@@ -51,9 +52,10 @@ Start
 → Update Watermark
 → Data Quality Checks
 → End
-
+```
 
 ### Incremental Load Path
+```text
 Triggered when metadata indicates the system is already initialized.
 Start
 → Incremental Dimension Load
@@ -61,7 +63,7 @@ Start
 → Update Watermark
 → Data Quality Checks
 → End
-
+```
 
 ---
 
