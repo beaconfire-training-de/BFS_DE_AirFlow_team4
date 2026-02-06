@@ -138,35 +138,24 @@ SET LAST_LOADED_DATE = NULL,
     IS_INITIALIZED = FALSE,
     LAST_RUN_TS = NULL
 WHERE JOB_NAME = 'stock_etl_4';
+```
 Then trigger main_stock_etl_4 again.
 
-Design Principles
-Idempotent ETL Design
+---
 
-Metadata-Driven Branching
+## Design Principles
+- Idempotent ETL Design
+- Metadata-Driven Branching
+- Full vs Incremental Separation
+- SCD Type 2 Dimension Handling
+- Data Quality Enforcement
+- Modular SQL Organization
+- Surrogate Key Generation
+- Scalable Fact Table Design
 
-Full vs Incremental Separation
-
-SCD Type 2 Dimension Handling
-
-Data Quality Enforcement
-
-Modular SQL Organization
-
-Surrogate Key Generation
-
-Scalable Fact Table Design
-
-Future Improvements
-Implement MERGE for fact incremental load
-
-Add Snowflake clustering keys for performance
-
-Add alerting and monitoring
-
-Parameterized DAG triggers
-
-CI/CD pipeline integration
-
-Author
-Team 4 – Data Engineering Project# Team 4 Airflow DAGs
+## Future Improvements
+- Implement MERGE for fact incremental load
+- Add Snowflake clustering keys for performance
+- Add alerting and monitoring
+- Parameterized DAG triggers
+- CI/CD pipeline integration
