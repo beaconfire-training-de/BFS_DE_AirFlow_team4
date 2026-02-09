@@ -1,3 +1,5 @@
+from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
+
 def ellie_load_dim_date():
     sql = """
     insert into TABLE AIRFLOW0105.DEV.DIM_DATE_4
@@ -15,3 +17,8 @@ def ellie_load_dim_date():
     FROM AIRFLOW0105.DEV.STG_STOCK_HISTORY_4;
 
     """
+    hook = SnowflakeHook(
+        snowflake_conn_id="snowflake_default"
+    )
+
+    hook.run(sql)
