@@ -4,10 +4,8 @@ from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 
-sys.path.append(os.path.dirname(__file__))
-
-import ellie_01_load_dim_date
-import ellie_02_load_dim_company_core
+from helper_sqlfunc import ellie_01_load_dim_date
+from helper_sqlfunc import ellie_02_load_dim_company_core
 
 with DAG(
     dag_id="ellie_init_load",
@@ -25,6 +23,7 @@ with DAG(
         python_callable=ellie_02_load_dim_company_core.ellie_load_dim_company_core,
     )
     task1 >> task2
+
 
 
 
