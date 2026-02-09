@@ -1,6 +1,11 @@
+import os
+import sys
 from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+
+sys.path.append(os.path.dirname(__file__))
+
 import ellie_01_load_dim_date
 
 with DAG(
