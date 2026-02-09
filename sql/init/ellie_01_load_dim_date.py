@@ -1,6 +1,6 @@
 def ellie_load_dim_date():
     sql = """
-    insert into TABLE AIRFLOW0105.DEV.DIM_DATE_4 AS
+    insert into TABLE AIRFLOW0105.DEV.DIM_DATE_4
     SELECT DISTINCT
     TO_NUMBER(TO_CHAR(date,'YYYYMMDD')) AS date_sk,
     date,
@@ -13,4 +13,5 @@ def ellie_load_dim_date():
     IFF(date = LAST_DAY(date), TRUE, FALSE)    AS is_month_end,
     FALSE AS is_quarter_end
     FROM AIRFLOW0105.DEV.STG_STOCK_HISTORY_4;
+
     """
