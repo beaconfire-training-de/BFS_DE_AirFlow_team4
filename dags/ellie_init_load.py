@@ -19,3 +19,8 @@ with DAG(
         task_id="ellie_01_load_dim_date",
         python_callable=ellie_01_load_dim_date.ellie_load_dim_date,
     )
+    task2 = PythonOperator(
+        task_id="ellie_02_load_dim_company_core",
+        python_callable=ellie_02_load_dim_company_core.ellie_load_dim_company_core,
+    )
+
