@@ -17,7 +17,8 @@ def ellie_load_dim_date():
 
     """
     hook = SnowflakeHook(
-        snowflake_conn_id="snowflake_default"
+        snowflake_conn_id="jan_airflow_snowflake"
     )
+
 
     hook.run(sql)
