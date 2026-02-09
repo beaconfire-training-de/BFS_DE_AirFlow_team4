@@ -24,6 +24,7 @@ with DAG(
         task_id="ellie_02_load_dim_company_core",
         python_callable=ellie_02_load_dim_company_core.ellie_load_dim_company_core,
     )
-task1 >> task2
+    task1 >> task2
+
 
 
