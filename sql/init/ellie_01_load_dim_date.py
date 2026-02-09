@@ -2,7 +2,7 @@ from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 
 def ellie_load_dim_date():
     sql = """
-    insert into TABLE AIRFLOW0105.DEV.DIM_DATE_4
+    insert into AIRFLOW0105.DEV.DIM_DATE_4
     SELECT DISTINCT
     TO_NUMBER(TO_CHAR(date,'YYYYMMDD')) AS date_sk,
     date,
@@ -18,7 +18,8 @@ def ellie_load_dim_date():
 
     """
     hook = SnowflakeHook(
-        snowflake_conn_id="snowflake_default"
+        snowflake_conn_id="jan_airflow_snowflake"
     )
 
     hook.run(sql)
+
